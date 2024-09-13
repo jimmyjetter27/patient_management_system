@@ -63,29 +63,17 @@ const Patient = ({auth}) => {
 
 
     // Handle submission of service data
+    // Handle submission of service data
     const handleServiceSubmit = (formData) => {
+        // Ensure currentService is correct
+        // console.log('currentService: ', currentService);
+        console.log('formData inside handleServiceSubmit: ', formData);
 
-        console.log('currentService: ', currentService);
-        console.log('formData inside handleSErviceSubmit length: ', formData);
         // Save the service data in state
-        setServiceData((prevServiceData) => {
-            // Return the updated service data (for state)
-            return {
-                ...prevServiceData,
-                [currentService]: formData, // Ensure currentService is correct and synced
-            };
-        });
-
-        // Store updated service data in local storage after state update
-        // useEffect(() => {
-        //     if (serviceData) {
-        //         localStorage.setItem("serviceFormData", JSON.stringify(serviceData)); // Save all service data to localStorage
-        //     }
-        // }, [serviceData]);
-
-        // Close the service form modal
+        setServiceData(formData); // Save the entire form data object in the state
         setShowServiceForm(false);
     };
+
 
 
 
@@ -172,7 +160,8 @@ const Patient = ({auth}) => {
         e.preventDefault();
 
         // console.log('serviceData inside submit: ', serviceData);
-        console.log('obstetricHistory: ', serviceData.obstetricHistory);
+        console.log('comments: ', serviceData.comments);
+        console.log('current_pregnancy: ', serviceData.currentPregnancy);
         // Restructure the service data to match the backend's validation rules
         const patientWithServices = {
             ...values, // Include the patient data
@@ -189,14 +178,15 @@ const Patient = ({auth}) => {
         };
 
         // Post the structured data to the backend
-        // router.post('/patients', patientWithServices, {
-        //     preserveScroll: true,
-        //     onSuccess: () => {
-        //         localStorage.removeItem("serviceFormData"); // Clear localStorage after submission
-        //         setServiceData({}); // Reset service data
-        //         closePatientStore();  // Close the modal after saving
-        //     },
-        // });
+        router.post('/patients', patientWithServices, {
+            preserveScroll: true,
+            onSuccess: () => {
+                localStorage.removeItem("serviceFormData"); // Clear localStorage after submission
+                localStorage.removeItem("selectedService");
+                setServiceData({}); // Reset service data
+                closePatientStore();  // Close the modal after saving
+            },
+        });
     };
 
 

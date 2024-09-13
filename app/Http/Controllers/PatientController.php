@@ -13,6 +13,7 @@ use App\Models\ObstetricHistory;
 use App\Models\Patient;
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
+use App\Models\PatientService;
 use App\Models\RiskAssessment;
 use App\Models\ScanDetail;
 use App\Models\Signature;
@@ -45,11 +46,12 @@ class PatientController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-//    public function store(StorePatientRequest $request)
-    public function store(Request $request)
+    public function store(StorePatientRequest $request)
     {
-        Log::info('Store Patient Request: '. json_encode($request->all()));
-        return redirect()->back()->with('success_message', 'Patient and services added successfully');
+        // Log the incoming request data
+        Log::info('Store Patient Request: ' . json_encode($request->all()));
+
+        // Create a new patient record
         $patient = Patient::create($request->only([
             'name',
             'age',
@@ -60,101 +62,112 @@ class PatientController extends Controller
             'referring_physician',
         ]));
 
-        if ($request->has('obstetric_history')) {
-            ObstetricHistory::create([
-                'patient_id' => $patient->id,
-                'history_of_preterm_birth' => $request->input('obstetric_history.history_of_preterm_birth'),
-                'gestational_age_at_delivery' => $request->input('obstetric_history.gestational_age_at_delivery'),
-                'previous_cervical_interventions' => $request->input('obstetric_history.previous_cervical_interventions'),
-                'multiple_gestations' => $request->input('obstetric_history.multiple_gestations'),
-                'uterine_anomalies' => $request->input('obstetric_history.uterine_anomalies'),
-            ]);
+        // Define all services and their respective models and fields
+        $services = [
+            'obstetric_history' => [
+                'fields' => [
+                    'history_of_preterm_birth',
+                    'gestational_age_at_delivery',
+                    'previous_cervical_interventions',
+                    'multiple_gestations',
+                    'uterine_anomalies',
+                ]
+            ],
+            'current_pregnancy' => [
+                'fields' => [
+                    'indication_for_screening',
+                    'current_symptoms'
+                ]
+            ],
+            'scan_details' => [
+                'fields' => [
+                    'sonographer',
+                    'ultrasound_machine_settings_used',
+                    'transducer_type',
+                    'patient_preparation'
+                ]
+            ],
+            'cervical_assessment' => [
+                'fields' => [
+                    'cervical_length',
+                    'internal_os_condition',
+                    'external_os_condition',
+                    'cervical_consistency',
+                    'presence_of_cervical_suture',
+                    'amniotic_fluid_membrane_protrusion'
+                ]
+            ],
+            'risk_assessment' => [
+                'fields' => [
+                    'risk_stratification',
+                    'biomarkers_tests'
+                ]
+            ],
+            'interpretation_and_recommendations' => [
+                'fields' => [
+                    'cervical_length_interpretation',
+                    'preventive_measures',
+                    'patient_education_provided'
+                ]
+            ],
+            'follow_up' => [
+                'fields' => [
+                    'frequency_of_cervical_monitoring',
+                    'referrals',
+                    'intervention_plan',
+                    'scheduled_follow_up_date'
+                ]
+            ],
+            'attachments' => [
+                'fields' => [
+                    'ultrasound_images'
+                ]
+            ],
+            'comments' => [
+                'fields' => [
+                    'additional_observations',
+                    'patient_compliance'
+                ]
+            ],
+            'signatures' => [
+                'fields' => [
+                    'sonographer_signature',
+                    'supervising_physician_signature',
+                    'date'
+                ]
+            ]
+        ];
+
+        // Handle file uploads separately for attachments
+        if ($request->hasFile('attachments.ultrasound_images')) {
+            $file = $request->file('attachments.ultrasound_images');
+            $filePath = $file->store('ultrasound_images', 'public'); // Store the image in the storage folder
+            $request->merge(['attachments' => ['ultrasound_images' => $filePath]]);
         }
 
-        if ($request->has('current_pregnancy')) {
-            CurrentPregnancy::create([
-                'patient_id' => $patient->id,
-                'indication_for_screening' => $request->input('current_pregnancy.indication_for_screening'),
-                'current_symptoms' => $request->input('current_pregnancy.current_symptoms'),
-            ]);
-        }
+        // Process each service and store the corresponding data
+        foreach ($services as $serviceKey => $serviceInfo) {
+            $serviceData = [];
 
-        if ($request->has('scan_details')) {
-            ScanDetail::create([
-                'patient_id' => $patient->id,
-                'sonographer' => $request->input('scan_details.sonographer'),
-                'ultrasound_machine_settings_used' => $request->input('scan_details.ultrasound_machine_settings_used'),
-                'transducer_type' => $request->input('scan_details.transducer_type'),
-                'patient_preparation' => $request->input('scan_details.patient_preparation'),
-            ]);
-        }
+            // If there's data for this service in the request, process it
+            if ($request->has($serviceKey) && !empty(array_filter($request->input($serviceKey)))) {
+                foreach ($serviceInfo['fields'] as $field) {
+                    $serviceData[$field] = $request->input("{$serviceKey}.{$field}");
+                }
 
-        if ($request->has('cervical_assessment')) {
-            CervicalAssessment::create([
-                'patient_id' => $patient->id,
-                'cervical_length' => $request->input('cervical_assessment.cervical_length'),
-                'internal_os_condition' => $request->input('cervical_assessment.internal_os_condition'),
-                'external_os_condition' => $request->input('cervical_assessment.external_os_condition'),
-                'cervical_consistency' => $request->input('cervical_assessment.cervical_consistency'),
-                'presence_of_cervical_suture' => $request->input('cervical_assessment.presence_of_cervical_suture'),
-                'amniotic_fluid_membrane_protrusion' => $request->input('cervical_assessment.amniotic_fluid_membrane_protrusion'),
-            ]);
-        }
-
-        if ($request->has('risk_assessment')) {
-            RiskAssessment::create([
-                'patient_id' => $patient->id,
-                'risk_stratification' => $request->input('risk_stratification'),
-                'biomarkers_tests' => $request->input('biomarkers_tests')
-            ]);
-        }
-
-        if ($request->has('interpretation_and_recommendations')) {
-            InterpretationAndRecommendation::create([
-                'patient_id' => $patient->id,
-                'cervical_length_interpretation' => $request->input('interpretation_and_recommendations.cervical_length_interpretation'),
-                'preventive_measures' => $request->input('interpretation_and_recommendations.preventive_measures'),
-                'patient_education_provided' => $request->input('interpretation_and_recommendations.patient_education_provided'),
-            ]);
-        }
-
-        if ($request->has('follow_up')) {
-            CervicalAssessment::create([
-                'patient_id' => $patient->id,
-                'frequency_of_cervical_monitoring' => $request->input('follow_up.frequency_of_cervical_monitoring'),
-                'referrals' => $request->input('follow_up.referrals'),
-                'intervention_plan' => $request->input('follow_up.intervention_plan'),
-                'scheduled_follow_up_date' => $request->input('follow_up.scheduled_follow_up_date'),
-            ]);
-        }
-
-        if ($request->has('attachments')) {
-            CervicalAssessment::create([
-                'patient_id' => $patient->id,
-                'ultrasound_images' => $request->input('attachments.ultrasound_images'),
-            ]);
-        }
-
-        if ($request->has('comments')) {
-            CervicalAssessment::create([
-                'patient_id' => $patient->id,
-                'additional_observations' => $request->input('comments.additional_observations'),
-                'patient_compliance' => $request->input('comments.patient_compliance'),
-            ]);
-        }
-
-        if ($request->has('signatures')) {
-            CervicalAssessment::create([
-                'patient_id' => $patient->id,
-                'sonographer_signature' => $request->input('signatures.sonographer_signature'),
-                'supervising_physician_signature' => $request->input('signatures.supervising_physician_signature'),
-                'date' => $request->input('signatures.date'),
-            ]);
+                // Store the service in the `patient_services` table
+                PatientService::create([
+                    'patient_id' => $patient->id,
+                    'service_type' => $serviceKey,
+                    'service_data' => json_encode($serviceData),
+                ]);
+            }
         }
 
         return redirect()->back()->with('success_message', 'Patient and services added successfully');
-
     }
+
+
 
     /**
      * Display the specified resource.
@@ -177,133 +190,127 @@ class PatientController extends Controller
      */
     public function update(UpdatePatientRequest $request, Patient $patient)
     {
-
+        // Update patient basic information
         $patient->update($request->validated());
 
-        // Obstetric History
-        if ($request->has('obstetric_history')) {
-            ObstetricHistory::updateOrCreate(
-                ['patient_id' => $patient->id],  // Find the record by patient_id
-                [
-                    'history_of_preterm_birth' => $request->input('obstetric_history.history_of_preterm_birth'),
-                    'gestational_age_at_delivery' => $request->input('obstetric_history.gestational_age_at_delivery'),
-                    'previous_cervical_interventions' => $request->input('obstetric_history.previous_cervical_interventions'),
-                    'multiple_gestations' => $request->input('obstetric_history.multiple_gestations'),
-                    'uterine_anomalies' => $request->input('obstetric_history.uterine_anomalies'),
+        // Define all services and their respective models and fields
+        $services = [
+            'obstetric_history' => [
+                'model' => ObstetricHistory::class,
+                'fields' => [
+                    'history_of_preterm_birth',
+                    'gestational_age_at_delivery',
+                    'previous_cervical_interventions',
+                    'multiple_gestations',
+                    'uterine_anomalies',
                 ]
-            );
-        }
+            ],
+            'current_pregnancy' => [
+                'model' => CurrentPregnancy::class,
+                'fields' => [
+                    'indication_for_screening',
+                    'current_symptoms'
+                ]
+            ],
+            'scan_details' => [
+                'model' => ScanDetail::class,
+                'fields' => [
+                    'sonographer',
+                    'ultrasound_machine_settings_used',
+                    'transducer_type',
+                    'patient_preparation'
+                ]
+            ],
+            'cervical_assessment' => [
+                'model' => CervicalAssessment::class,
+                'fields' => [
+                    'cervical_length',
+                    'internal_os_condition',
+                    'external_os_condition',
+                    'cervical_consistency',
+                    'presence_of_cervical_suture',
+                    'amniotic_fluid_membrane_protrusion'
+                ]
+            ],
+            'risk_assessment' => [
+                'model' => RiskAssessment::class,
+                'fields' => [
+                    'risk_stratification',
+                    'biomarkers_tests'
+                ]
+            ],
+            'interpretation_and_recommendations' => [
+                'model' => InterpretationAndRecommendation::class,
+                'fields' => [
+                    'cervical_length_interpretation',
+                    'preventive_measures',
+                    'patient_education_provided'
+                ]
+            ],
+            'follow_up' => [
+                'model' => FollowUp::class,
+                'fields' => [
+                    'frequency_of_cervical_monitoring',
+                    'referrals',
+                    'intervention_plan',
+                    'scheduled_follow_up_date'
+                ]
+            ],
+            'attachments' => [
+                'model' => Attachment::class,
+                'fields' => [
+                    'ultrasound_images'
+                ]
+            ],
+            'comments' => [
+                'model' => Comment::class,
+                'fields' => [
+                    'additional_observations',
+                    'patient_compliance'
+                ]
+            ],
+            'signatures' => [
+                'model' => Signature::class,
+                'fields' => [
+                    'sonographer_signature',
+                    'supervising_physician_signature',
+                    'date'
+                ]
+            ]
+        ];
 
-        // Current Pregnancy
-        if ($request->has('current_pregnancy')) {
-            CurrentPregnancy::updateOrCreate(
-                ['patient_id' => $patient->id],
-                [
-                    'indication_for_screening' => $request->input('current_pregnancy.indication_for_screening'),
-                    'current_symptoms' => $request->input('current_pregnancy.current_symptoms'),
-                ]
-            );
-        }
+        // Handle each service, including file uploads for attachments
+        foreach ($services as $serviceKey => $serviceInfo) {
+            // If there's data for the service, process it
+            if ($request->has($serviceKey) && !empty(array_filter($request->input($serviceKey)))) {
+                $serviceData = [];
 
-        // Scan Details
-        if ($request->has('scan_details')) {
-            ScanDetail::updateOrCreate(
-                ['patient_id' => $patient->id],
-                [
-                    'sonographer' => $request->input('scan_details.sonographer'),
-                    'ultrasound_machine_settings_used' => $request->input('scan_details.ultrasound_machine_settings_used'),
-                    'transducer_type' => $request->input('scan_details.transducer_type'),
-                    'patient_preparation' => $request->input('scan_details.patient_preparation'),
-                ]
-            );
-        }
+                // Handle file uploads separately
+                if ($serviceKey === 'attachments' && $request->hasFile('attachments.ultrasound_images')) {
+                    $file = $request->file('attachments.ultrasound_images');
+                    $filePath = $file->store('ultrasound_images', 'public');
+                    $serviceData['ultrasound_images'] = $filePath;
+                } else {
+                    // Gather non-file data
+                    foreach ($serviceInfo['fields'] as $field) {
+                        $serviceData[$field] = $request->input("{$serviceKey}.{$field}");
+                    }
+                }
 
-        // Cervical Assessment
-        if ($request->has('cervical_assessment')) {
-            CervicalAssessment::updateOrCreate(
-                ['patient_id' => $patient->id],
-                [
-                    'cervical_length' => $request->input('cervical_assessment.cervical_length'),
-                    'internal_os_condition' => $request->input('cervical_assessment.internal_os_condition'),
-                    'external_os_condition' => $request->input('cervical_assessment.external_os_condition'),
-                    'cervical_consistency' => $request->input('cervical_assessment.cervical_consistency'),
-                    'presence_of_cervical_suture' => $request->input('cervical_assessment.presence_of_cervical_suture'),
-                    'amniotic_fluid_membrane_protrusion' => $request->input('cervical_assessment.amniotic_fluid_membrane_protrusion'),
-                ]
-            );
-        }
-
-        // Risk Assessment
-        if ($request->has('risk_assessment')) {
-            RiskAssessment::updateOrCreate(
-                ['patient_id' => $patient->id],
-                [
-                    'risk_stratification' => $request->input('risk_assessment.risk_stratification'),
-                    'biomarkers_tests' => $request->input('risk_assessment.biomarkers_tests'),
-                ]
-            );
-        }
-
-        // Interpretation and Recommendations
-        if ($request->has('interpretation_and_recommendations')) {
-            InterpretationAndRecommendation::updateOrCreate(
-                ['patient_id' => $patient->id],
-                [
-                    'cervical_length_interpretation' => $request->input('interpretation_and_recommendations.cervical_length_interpretation'),
-                    'preventive_measures' => $request->input('interpretation_and_recommendations.preventive_measures'),
-                    'patient_education_provided' => $request->input('interpretation_and_recommendations.patient_education_provided'),
-                ]
-            );
-        }
-
-        // Follow Up
-        if ($request->has('follow_up')) {
-            FollowUp::updateOrCreate(
-                ['patient_id' => $patient->id],
-                [
-                    'frequency_of_cervical_monitoring' => $request->input('follow_up.frequency_of_cervical_monitoring'),
-                    'referrals' => $request->input('follow_up.referrals'),
-                    'intervention_plan' => $request->input('follow_up.intervention_plan'),
-                    'scheduled_follow_up_date' => $request->input('follow_up.scheduled_follow_up_date'),
-                ]
-            );
-        }
-
-        // Attachments
-        if ($request->has('attachments')) {
-            Attachment::updateOrCreate(
-                ['patient_id' => $patient->id],
-                [
-                    'ultrasound_images' => $request->input('attachments.ultrasound_images'),
-                ]
-            );
-        }
-
-        // Comments
-        if ($request->has('comments')) {
-            Comment::updateOrCreate(
-                ['patient_id' => $patient->id],
-                [
-                    'additional_observations' => $request->input('comments.additional_observations'),
-                    'patient_compliance' => $request->input('comments.patient_compliance'),
-                ]
-            );
-        }
-
-        // Signatures
-        if ($request->has('signatures')) {
-            Signature::updateOrCreate(
-                ['patient_id' => $patient->id],
-                [
-                    'sonographer_signature' => $request->input('signatures.sonographer_signature'),
-                    'supervising_physician_signature' => $request->input('signatures.supervising_physician_signature'),
-                    'date' => $request->input('signatures.date'),
-                ]
-            );
+                // Update or create the service record if data exists
+                $serviceInfo['model']::updateOrCreate(
+                    ['patient_id' => $patient->id],
+                    $serviceData
+                );
+            } else {
+                // If there's no valid data for the service, consider deleting existing record
+                $serviceInfo['model']::where('patient_id', $patient->id)->delete();
+            }
         }
 
         return redirect()->back()->with('success_message', 'Patient and services updated successfully.');
     }
+
 
     /**
      * Remove the specified resource from storage.

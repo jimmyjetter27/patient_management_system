@@ -56,15 +56,21 @@ const serviceForms = {
 };
 
 const ServiceFormComponent = ({ onSubmit, onCancel }) => {
-    const [formData, setFormData] = useState({});
-    const [selectedService, setSelectedService] = useState("obstetricHistory");
+    const [formData, setFormData] = useState(() => {
+        const savedFormData = localStorage.getItem("serviceFormData");
+        return savedFormData ? JSON.parse(savedFormData) : {};
+    });
+    const [selectedService, setSelectedService] = useState(() => {
+        const savedService = localStorage.getItem("selectedService");
+        return savedService || "obstetricHistory";
+    });
 
     // Load the saved service and form data from localStorage when the component mounts
     useEffect(() => {
         const savedFormData = localStorage.getItem("serviceFormData");
         if (savedFormData) {
             const parsedData = JSON.parse(savedFormData);
-            setFormData(parsedData[selectedService] || {});
+            setFormData(parsedData[selectedService] || {}); // Load only the formData for the selected service
         }
     }, [selectedService]);
 
@@ -91,7 +97,6 @@ const ServiceFormComponent = ({ onSubmit, onCancel }) => {
         };
         setFormData(updatedFormData);
 
-        // console.log('updatedFormData: ', updatedFormData);
         // Save the updated form data for the selected service in localStorage
         const savedFormData = localStorage.getItem("serviceFormData");
         const parsedData = savedFormData ? JSON.parse(savedFormData) : {};
@@ -102,15 +107,27 @@ const ServiceFormComponent = ({ onSubmit, onCancel }) => {
 
     // console.log('serviceFormData : ', formData);
 
+
     // Handle switching service type
     const handleServiceChange = (e) => {
         setSelectedService(e.target.value);
+        localStorage.setItem("selectedService", e.target.value); // Save selected service to localStorage
     };
 
     // Handle form submission
+    // const handleSubmit = (e) => {
+    //     e.preventDefault();
+    //     onSubmit(formData); // Pass the current form data to the parent component
+    // };
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(formData); // Pass the current form data to the parent component
+
+        // Retrieve all saved service data from localStorage and pass it to the parent component
+        const allServiceData = localStorage.getItem("serviceFormData");
+        const parsedData = allServiceData ? JSON.parse(allServiceData) : {};
+
+        onSubmit(parsedData); // Pass all service data to the parent component
     };
 
     const formatLabel = (label) => {

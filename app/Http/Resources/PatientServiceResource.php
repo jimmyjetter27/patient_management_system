@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class PatientResource extends JsonResource
+class PatientServiceResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,16 +16,10 @@ class PatientResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'age' => $this->age,
-            'hospital_id' => $this->hospital_id,
-            'date_of_scan' => $this->date_of_scan,
-            'gestational_age' => $this->gestational_age,
-            'parity_gravidity' => $this->parity_gravidity,
-            'referring_physician' => $this->referring_physician,
+            'service_type' => $this->service_type,
+            'service_data' => json_decode($this->service_data, true), // Decode the JSON service data into an array
             'created_at' => $this->created_at->toDateTimeString(),
             'updated_at' => $this->updated_at->toDateTimeString(),
-            'services' => PatientServiceResource::collection($this->services),
         ];
     }
 }

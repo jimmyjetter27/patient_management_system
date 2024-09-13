@@ -29,6 +29,7 @@ class UpdatePatientRequest extends FormRequest
             'gestational_age' => 'sometimes|integer|min:0|max:40',
             'parity_gravidity' => 'sometimes|string|max:255',
             'referring_physician' => 'sometimes|string|max:255',
+            'attachments.ultrasound_images' => 'sometimes|file|mimes:jpg,jpeg,png|max:10240'
         ];
     }
 }

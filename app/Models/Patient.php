@@ -13,6 +13,11 @@ class Patient extends Model
         'name', 'age', 'hospital_id', 'date_of_scan', 'gestational_age', 'parity_gravidity', 'referring_physician'
     ];
 
+    public function services()
+    {
+        return $this->hasMany(PatientService::class);
+    }
+
     public function obstetricHistory()
     {
         return $this->hasOne(ObstetricHistory::class);
