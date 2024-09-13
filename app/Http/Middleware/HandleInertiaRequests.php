@@ -47,7 +47,7 @@ class HandleInertiaRequests extends Middleware
             'delete' => $user->can('delete', Patient::class),
             'printReport' => $user->can('printReport', Patient::class)
         ] : [];
-        Log::info('flash message: '. $request->session()->get('success_message'));
+//        Log::info('flash message: '. $request->session()->get('success_message'));
         return [
             ...parent::share($request),
             'auth' => [

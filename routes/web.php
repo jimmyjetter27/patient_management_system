@@ -27,7 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/users/{user}/delete', [\App\Http\Controllers\UserController::class, 'destroy'])->name('delete-user');
 
     Route::get('patients', [\App\Http\Controllers\PagesController::class, 'patients'])->name('patients');
-    Route::post('patients', [\App\Http\Controllers\PatientController::class, 'store'])->name('store-patient');
+    Route::post('/patients', [\App\Http\Controllers\PatientController::class, 'store'])->name('store-patient');
     Route::put('/patients/{patient}/edit', [\App\Http\Controllers\PatientController::class, 'update'])->name('update-patient');
     Route::delete('/patients/{patient}/delete', [\App\Http\Controllers\PatientController::class, 'destroy'])->name('delete-patient');
 });

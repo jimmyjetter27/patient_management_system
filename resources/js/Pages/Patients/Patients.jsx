@@ -2,7 +2,7 @@ import ParentLayout from '@/Layouts/ParentLayout';
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
 import React, {useEffect, useMemo, useState} from "react";
 import DataTable from 'react-data-table-component';
-import {Head, usePage, useForm, router} from "@inertiajs/react";
+import {Head, router, useForm, usePage} from "@inertiajs/react";
 import Modal from "@/Components/Modal.jsx";
 import SecondaryButton from "@/Components/SecondaryButton.jsx";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
@@ -48,9 +48,9 @@ const Patient = ({auth}) => {
     const [showServiceForm, setShowServiceForm] = useState(false);
 
     // Save serviceData to localStorage when it changes
-    useEffect(() => {
-        localStorage.setItem("serviceFormData", JSON.stringify(serviceData));
-    }, [serviceData]);
+    // useEffect(() => {
+    //     localStorage.setItem("serviceFormData", JSON.stringify(serviceData));
+    // }, [serviceData]);
 
     // Function to handle opening the service form modal
     const handleOpenServiceForm = () => {
@@ -62,15 +62,32 @@ const Patient = ({auth}) => {
     };
 
 
-
     // Handle submission of service data
     const handleServiceSubmit = (formData) => {
-        setServiceData((prevServiceData) => ({
-            ...prevServiceData,
-            [currentService]: formData,
-        }));
-        setShowServiceForm(false); // Close the service form modal
+
+        console.log('currentService: ', currentService);
+        console.log('formData inside handleSErviceSubmit length: ', formData);
+        // Save the service data in state
+        setServiceData((prevServiceData) => {
+            // Return the updated service data (for state)
+            return {
+                ...prevServiceData,
+                [currentService]: formData, // Ensure currentService is correct and synced
+            };
+        });
+
+        // Store updated service data in local storage after state update
+        // useEffect(() => {
+        //     if (serviceData) {
+        //         localStorage.setItem("serviceFormData", JSON.stringify(serviceData)); // Save all service data to localStorage
+        //     }
+        // }, [serviceData]);
+
+        // Close the service form modal
+        setShowServiceForm(false);
     };
+
+
 
     const handleServiceCancel = () => {
         setShowServiceForm(false);
@@ -144,29 +161,46 @@ const Patient = ({auth}) => {
 
     function handleChange(e) {
         const {name, value} = e.target;
-        setValues(prevValues => ({
+        setValues((prevValues) => ({
             ...prevValues,
             [name]: value,
         }));
     }
 
+
     const submit = (e) => {
         e.preventDefault();
+
+        // console.log('serviceData inside submit: ', serviceData);
+        console.log('obstetricHistory: ', serviceData.obstetricHistory);
+        // Restructure the service data to match the backend's validation rules
         const patientWithServices = {
-            ...values, // Patient form data
-            services: serviceData, // Service data
+            ...values, // Include the patient data
+            obstetric_history: serviceData.obstetricHistory || null,
+            current_pregnancy: serviceData.currentPregnancy || null,
+            scan_details: serviceData.scanDetails || null,
+            cervical_assessment: serviceData.cervicalAssessment || null,
+            risk_assessment: serviceData.riskAssessment || null,
+            interpretation_and_recommendations: serviceData.interpretationAndRecommendations || null,
+            follow_up: serviceData.followUp || null,
+            attachments: serviceData.attachments || null,
+            comments: serviceData.comments || null,
+            signatures: serviceData.signatures || null,
         };
 
-        post(route('store-patient'), patientWithServices, {
-            preserveScroll: true,
-            onSuccess: () => {
-                localStorage.removeItem("serviceFormData"); // Clear localStorage after submission
-                setServiceData({});
-                closePatientStore();
-                fetchPatients(1);
-            },
-        });
+        // Post the structured data to the backend
+        // router.post('/patients', patientWithServices, {
+        //     preserveScroll: true,
+        //     onSuccess: () => {
+        //         localStorage.removeItem("serviceFormData"); // Clear localStorage after submission
+        //         setServiceData({}); // Reset service data
+        //         closePatientStore();  // Close the modal after saving
+        //     },
+        // });
     };
+
+
+
 
     const columns = useMemo(() => [
         {
@@ -228,7 +262,7 @@ const Patient = ({auth}) => {
                                     id: row.id,
                                     name: row.name
                                 })
-                        }
+                                }
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  strokeWidth={1.5}
@@ -318,16 +352,16 @@ const Patient = ({auth}) => {
                     <div className="space-x-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200"
                                htmlFor="name">Name</label>
-                        <input onChange={(e) => setData('name', e.target.value)}
+                        <input onChange={handleChange}
                                className="mt-1 block w-full px-3 py-2 bg-white dark:text-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-300 focus:border-indigo-500 dark:focus:border-indigo-300 sm:text-sm"
-                               id="name" type="text" name="name" required autoFocus/>
+                               id="name" type="text" name="name" required/>
                         <span className="text-red-600">{errors.name && <div>{errors.name}</div>}</span>
                     </div>
 
                     <div className="mt-4">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200" htmlFor="email">Age
                         </label>
-                        <input onChange={(e) => setData('age', e.target.value)}
+                        <input onChange={handleChange}
                                className="mt-1 block w-full px-3 py-2 bg-white dark:text-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-300 focus:border-indigo-500 dark:focus:border-indigo-300 sm:text-sm"
                                id="age" type="number" name="age" required/>
                         <span className="text-red-600">{errors.age && <div>{errors.age}</div>}</span>
@@ -336,27 +370,27 @@ const Patient = ({auth}) => {
                     <div className="space-x-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200"
                                htmlFor="hospital_id">Hospital ID</label>
-                        <input onChange={(e) => setData('hospital_id', e.target.value)}
+                        <input onChange={handleChange}
                                className="mt-1 block w-full px-3 py-2 bg-white dark:text-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-300 focus:border-indigo-500 dark:focus:border-indigo-300 sm:text-sm"
-                               id="hospital_id" type="text" name="hospital_id" required autoFocus/>
+                               id="hospital_id" type="text" name="hospital_id" required/>
                         <span className="text-red-600">{errors.hospital_id && <div>{errors.hospital_id}</div>}</span>
                     </div>
 
                     <div className="space-x-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200"
                                htmlFor="date_of_scan">Date of Scan</label>
-                        <input onChange={(e) => setData('date_of_scan', e.target.value)}
+                        <input onChange={handleChange}
                                className="mt-1 block w-full px-3 py-2 bg-white dark:text-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-300 focus:border-indigo-500 dark:focus:border-indigo-300 sm:text-sm"
-                               id="date_of_scan" type="date" name="date_of_scan" required autoFocus/>
+                               id="date_of_scan" type="date" name="date_of_scan" required/>
                         <span className="text-red-600">{errors.date_of_scan && <div>{errors.date_of_scan}</div>}</span>
                     </div>
 
                     <div className="space-x-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200"
                                htmlFor="gestational_age">Gestational Age</label>
-                        <input onChange={(e) => setData('gestational_age', e.target.value)}
+                        <input onChange={handleChange}
                                className="mt-1 block w-full px-3 py-2 bg-white dark:text-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-300 focus:border-indigo-500 dark:focus:border-indigo-300 sm:text-sm"
-                               id="gestational_age" type="number" name="gestational_age" required autoFocus/>
+                               id="gestational_age" type="number" name="gestational_age" required/>
                         <span className="text-red-600">{errors.gestational_age &&
                             <div>{errors.gestational_age}</div>}</span>
                     </div>
@@ -364,9 +398,9 @@ const Patient = ({auth}) => {
                     <div className="space-x-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200"
                                htmlFor="parity_gravidity">Parity Gravidity</label>
-                        <input onChange={(e) => setData('parity_gravidity', e.target.value)}
+                        <input onChange={handleChange}
                                className="mt-1 block w-full px-3 py-2 bg-white dark:text-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-300 focus:border-indigo-500 dark:focus:border-indigo-300 sm:text-sm"
-                               id="parity_gravidity" type="text" name="parity_gravidity" required autoFocus/>
+                               id="parity_gravidity" type="text" name="parity_gravidity" required/>
                         <span className="text-red-600">{errors.parity_gravidity &&
                             <div>{errors.parity_gravidity}</div>}</span>
                     </div>
@@ -374,9 +408,9 @@ const Patient = ({auth}) => {
                     <div className="space-x-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200"
                                htmlFor="referring_physician">Referring Physician</label>
-                        <input onChange={(e) => setData('referring_physician', e.target.value)}
+                        <input onChange={handleChange}
                                className="mt-1 block w-full px-3 py-2 bg-white dark:text-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-300 focus:border-indigo-500 dark:focus:border-indigo-300 sm:text-sm"
-                               id="referring_physician" type="text" name="referring_physician" required autoFocus/>
+                               id="referring_physician" type="text" name="referring_physician" required/>
                         <span className="text-red-600">{errors.referring_physician &&
                             <div>{errors.referring_physician}</div>}</span>
                     </div>
@@ -540,8 +574,8 @@ const Patient = ({auth}) => {
             {/* Modal for adding service */}
             <Modal show={showServiceForm} onClose={() => setShowServiceForm(false)}>
                 <ServiceFormComponent
-                    initialServiceType="obstetricHistory"  // or another default service type
-                    formData={formData}                    // Pass the stored formData
+                    // initialServiceType="obstetricHistory"  // or another default service type
+                    // formData={formData}                    // Pass the stored formData
                     onSubmit={handleServiceSubmit}
                     onCancel={handleServiceCancel}
                 />

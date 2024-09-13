@@ -55,41 +55,52 @@ const serviceForms = {
     ],
 };
 
-const ServiceFormComponent = ({ initialServiceType = "obstetricHistory", onSubmit, onCancel }) => {
-    const [formData, setFormData] = useState(() => {
-        const savedData = localStorage.getItem("serviceFormData");
-        return savedData ? JSON.parse(savedData) : {};
-    });
+const ServiceFormComponent = ({ onSubmit, onCancel }) => {
+    const [formData, setFormData] = useState({});
+    const [selectedService, setSelectedService] = useState("obstetricHistory");
 
-    const [selectedService, setSelectedService] = useState(initialServiceType);
-
-    // Load saved data from localStorage for selected service type
+    // Load the saved service and form data from localStorage when the component mounts
     useEffect(() => {
-        const savedData = localStorage.getItem("serviceFormData");
-        if (savedData) {
-            const parsedData = JSON.parse(savedData);
+        const savedFormData = localStorage.getItem("serviceFormData");
+        if (savedFormData) {
+            const parsedData = JSON.parse(savedFormData);
             setFormData(parsedData[selectedService] || {});
         }
     }, [selectedService]);
 
-    // Save formData to localStorage whenever it changes
-    useEffect(() => {
-        const savedData = localStorage.getItem("serviceFormData");
-        const parsedData = savedData ? JSON.parse(savedData) : {};
-        localStorage.setItem("serviceFormData", JSON.stringify({
-            ...parsedData,
-            [selectedService]: formData,
-        }));
-    }, [formData, selectedService]);
+
+
+    // Save the selected service and form data to localStorage whenever they change
+    // useEffect(() => {
+    //     const savedFormData = localStorage.getItem("serviceFormData");
+    //     const parsedData = savedFormData ? JSON.parse(savedFormData) : {};
+    //     parsedData[selectedService] = formData; // Save the specific service's form data
+    //     localStorage.setItem("serviceFormData", JSON.stringify(parsedData));
+    // }, [formData, selectedService]);
+
+
+
+
 
     // Handle form field changes
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData((prevData) => ({
-            ...prevData,
+        const updatedFormData = {
+            ...formData,
             [name]: type === "checkbox" ? checked : value,
-        }));
+        };
+        setFormData(updatedFormData);
+
+        // console.log('updatedFormData: ', updatedFormData);
+        // Save the updated form data for the selected service in localStorage
+        const savedFormData = localStorage.getItem("serviceFormData");
+        const parsedData = savedFormData ? JSON.parse(savedFormData) : {};
+        parsedData[selectedService] = updatedFormData;
+        localStorage.setItem("serviceFormData", JSON.stringify(parsedData));
     };
+
+
+    // console.log('serviceFormData : ', formData);
 
     // Handle switching service type
     const handleServiceChange = (e) => {
@@ -99,7 +110,13 @@ const ServiceFormComponent = ({ initialServiceType = "obstetricHistory", onSubmi
     // Handle form submission
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(formData);  // Pass the formData to parent
+        onSubmit(formData); // Pass the current form data to the parent component
+    };
+
+    const formatLabel = (label) => {
+        return label
+            .replace(/([A-Z])/g, " $1") // Add a space before capital letters
+            .replace(/^./, (str) => str.toUpperCase()); // Capitalize the first letter
     };
 
     return (
@@ -116,7 +133,7 @@ const ServiceFormComponent = ({ initialServiceType = "obstetricHistory", onSubmi
                 >
                     {Object.keys(serviceForms).map((service, index) => (
                         <option key={index} value={service}>
-                            {service.replace(/([A-Z])/g, ' $1').trim()} {/* Format camelCase to spaced words */}
+                            {formatLabel(service)}
                         </option>
                     ))}
                 </select>
@@ -133,7 +150,7 @@ const ServiceFormComponent = ({ initialServiceType = "obstetricHistory", onSubmi
                                 <input
                                     type="checkbox"
                                     name={field.name}
-                                    checked={formData[field.name] || false}
+                                    checked={!!formData[field.name]} // Ensure checkbox is handled correctly
                                     onChange={handleChange}
                                     className="w-6 h-6 align-middle"
                                 />
@@ -141,16 +158,17 @@ const ServiceFormComponent = ({ initialServiceType = "obstetricHistory", onSubmi
                                 <input
                                     type={field.type}
                                     name={field.name}
-                                    value={formData[field.name] || ""}
+                                    value={formData[field.name] || ""} // Ensure text/number fields are handled correctly
                                     onChange={handleChange}
-                                    className="w-full p-2 border border-gray-300 rounded text-black"
-                                    required={field.type !== 'file'}
+                                    className="w-full p-2 border border-gray-300 rounded"
+                                    required={field.type !== "file"}
                                 />
                             )}
                         </div>
                     ))}
                 </div>
 
+                {/* Buttons */}
                 <div className="flex justify-end space-x-3">
                     <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-500 text-white rounded">
                         Cancel
