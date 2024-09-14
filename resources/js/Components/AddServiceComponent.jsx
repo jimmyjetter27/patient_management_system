@@ -12,12 +12,12 @@ const AddServiceComponent = ({ patientId, patientName, onSubmit }) => {
         const { name, value, type, checked, files } = e.target;
 
         if (type === "file") {
-            const file = files[0]; // Handle single file
+            const file = files[0]; // Handle single file upload
             setServices((prevServices) => ({
                 ...prevServices,
                 [serviceType]: {
                     ...prevServices[serviceType],
-                    [name]: file, // Store the file
+                    [name]: file, // Store the file in the service data
                 },
             }));
         } else {
@@ -44,14 +44,19 @@ const AddServiceComponent = ({ patientId, patientName, onSubmit }) => {
             // Append each key-value pair in service_data to FormData
             Object.keys(serviceData).forEach((key) => {
                 if (serviceData[key] instanceof File) {
-                    formData.append(`services[${serviceType}][service_data][${key}]`, serviceData[key]);
+                    formData.append(`services[${serviceType}][${key}]`, serviceData[key]);
                 } else {
-                    formData.append(`services[${serviceType}][service_data][${key}]`, serviceData[key] || "");
+                    formData.append(`services[${serviceType}][${key}]`, serviceData[key] || "");
                 }
             });
 
             // Ensure the service_type is appended properly
             formData.append(`services[${serviceType}][service_type]`, serviceType);
+        });
+
+        // Log the FormData to inspect what's being sent
+        formData.forEach((value, key) => {
+            console.log(key, value);
         });
 
         // Submit using Inertia.js router with formData
@@ -65,8 +70,6 @@ const AddServiceComponent = ({ patientId, patientName, onSubmit }) => {
             },
         });
     };
-
-
 
 
     return (
@@ -111,6 +114,7 @@ const AddServiceComponent = ({ patientId, patientName, onSubmit }) => {
                                     name={field.name}
                                     onChange={handleChange}
                                     className="w-full p-2 border border-gray-300 rounded"
+                                    required
                                 />
                             ) : (
                                 <input

@@ -22,10 +22,10 @@ class StoreServiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'services' => 'required|array', // Ensure that "services" is an array
+            'services' => 'required|array',
             'services.*.service_type' => 'required|string|in:obstetricHistory,currentPregnancy,scanDetails,cervicalAssessment,riskAssessment,interpretationAndRecommendations,followUp,attachments,comments,signatures',
-            'services.*.service_data' => 'required|array', // Validate each service_data as an array
-            'services.*.service_data.*' => 'nullable',
+            'services.*.service_data' => 'required|array',
+            'services.*.service_data.ultrasound_images' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048', // Validate the file // File validation for attachments (ultrasound_images)
         ];
     }
 
@@ -39,6 +39,9 @@ class StoreServiceRequest extends FormRequest
             'services.*.service_type.required' => 'Each service must have a type.',
             'services.*.service_type.in' => 'Invalid service type.',
             'services.*.service_data.required' => 'Each service must have data.',
+            'services.attachments.service_data.ultrasound_images.file' => 'The ultrasound image must be a valid file.',
+            'services.attachments.service_data.ultrasound_images.mimes' => 'The ultrasound image must be a file of type: jpeg, png, jpg.',
+            'services.attachments.service_data.ultrasound_images.max' => 'The ultrasound image must not exceed 2MB.',
         ];
     }
 }
