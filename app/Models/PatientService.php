@@ -14,4 +14,9 @@ class PatientService extends Model
     protected $casts = [
         'service_data' => 'array',
     ];
+
+    public function patient()
+    {
+        return $this->belongsTo(Patient::class);
+    }
 }

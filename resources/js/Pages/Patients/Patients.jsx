@@ -8,6 +8,7 @@ import SecondaryButton from "@/Components/SecondaryButton.jsx";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import DangerButton from "@/Components/DangerButton.jsx";
 import ServiceFormComponent from "@/Components/ServiceFormComponent.jsx";
+import AddServiceComponent from "@/Components/AddServiceComponent.jsx";
 
 const Patient = ({auth}) => {
     const [patientData, setPatientData] = useState([]);
@@ -46,6 +47,7 @@ const Patient = ({auth}) => {
     const [serviceData, setServiceData] = useState({});
     const [currentService, setCurrentService] = useState('obstetricHistory');
     const [showServiceForm, setShowServiceForm] = useState(false);
+    const [showAddServiceForm, setShowAddServiceForm] = useState(false);
 
     // Save serviceData to localStorage when it changes
     // useEffect(() => {
@@ -61,6 +63,11 @@ const Patient = ({auth}) => {
         setFormData(formData); // Set the formData in the parent state
         setShowServiceForm(true); // Open the modal to show the form
     };
+
+    const handleOpenAddServiceForm = (patient) => {
+        setSelectedPatient(patient);
+        setShowAddServiceForm(true);
+    }
 
 
     // Handle submission of service data
@@ -85,10 +92,26 @@ const Patient = ({auth}) => {
 
 
 
-    const handleServiceCancel = () => {
+    const handleServiceCancel = (selectedService) => {
+        // Check if there is any form data filled
+        const savedFormData = localStorage.getItem("serviceFormData");
+        const hasFormData = savedFormData && Object.keys(JSON.parse(savedFormData)[selectedService] || {}).length > 0;
+
+        // If the user has filled out some fields, confirm cancellation
+        if (hasFormData) {
+            const confirmCancel = window.confirm("You have unsaved changes. Are you sure you want to cancel?");
+            if (!confirmCancel) {
+                return; // If the user cancels the cancellation, exit the function
+            }
+        }
+
+        // Clear form data if the user confirms the cancellation
+        localStorage.removeItem("serviceFormData");
+        localStorage.removeItem("selectedService");
         setShowServiceForm(false);
         setConfirmingPatientStore(true); // Return to patient creation
     };
+
 
     const confirmPatientUpdate = (patient) => {
         setSelectedPatient(patient);
@@ -235,7 +258,7 @@ const Patient = ({auth}) => {
                 <div className="flex justify-center space-x-2">
                     <div>
                         <button className="text-green-600 hover:text-green-900"
-                            onClick={() => confirmPatientUpdate({
+                            onClick={() => handleOpenAddServiceForm({
                                 id: row.id,
                                 name: row.name,
                             })}
@@ -614,6 +637,9 @@ const Patient = ({auth}) => {
                     onSubmit={handleServiceSubmit}
                     onCancel={handleServiceCancel}
                 />
+            </Modal>
+            <Modal show={showAddServiceForm} onClose={() => setShowAddServiceForm(false)}>
+                <AddServiceComponent patientId={selectedPatient.id} patientName={selectedPatient.name} onSubmit={() => setShowAddServiceForm(false)} />
             </Modal>
         </>
     );

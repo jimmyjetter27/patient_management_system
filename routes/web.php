@@ -30,6 +30,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/patients', [\App\Http\Controllers\PatientController::class, 'store'])->name('store-patient');
     Route::put('/patients/{patient}/edit', [\App\Http\Controllers\PatientController::class, 'update'])->name('update-patient');
     Route::delete('/patients/{patient}/delete', [\App\Http\Controllers\PatientController::class, 'destroy'])->name('delete-patient');
+
+    Route::post('add-service/{patient}', [\App\Http\Controllers\ServiceController::class, 'store'])->name('store-service');
 });
 
 
