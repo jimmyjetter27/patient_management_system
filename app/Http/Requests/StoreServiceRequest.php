@@ -22,9 +22,23 @@ class StoreServiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'service_type' => 'required|string|in:obstetric_history,current_pregnancy,scan_details,cervical_assessment,risk_assessment,interpretation_and_recommendations,follow_up,attachments,comments,signatures',
-            'service_data' => 'required|array',
-            'service_data.*' => 'nullable|string',
+            'services' => 'required|array', // Ensure that "services" is an array
+            'services.*.service_type' => 'required|string|in:obstetricHistory,currentPregnancy,scanDetails,cervicalAssessment,riskAssessment,interpretationAndRecommendations,followUp,attachments,comments,signatures',
+            'services.*.service_data' => 'required|array', // Validate each service_data as an array
+            'services.*.service_data.*' => 'nullable',
+        ];
+    }
+
+    /**
+     * Custom messages for validation errors.
+     */
+    public function messages(): array
+    {
+        return [
+            'services.required' => 'At least one service must be provided.',
+            'services.*.service_type.required' => 'Each service must have a type.',
+            'services.*.service_type.in' => 'Invalid service type.',
+            'services.*.service_data.required' => 'Each service must have data.',
         ];
     }
 }

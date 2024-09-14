@@ -1,143 +1,144 @@
-import React, {useEffect, useState} from "react";
-import ServiceFormComponent from "@/Components/ServiceFormComponent.jsx";
+import React, { useState } from "react";
+import serviceForms from "@/serviceForms.js";
+import { router, usePage } from "@inertiajs/react";
 
-const AddServiceComponent = ({patientId, patientName, onSubmit}) => {
+const AddServiceComponent = ({ patientId, patientName, onSubmit }) => {
+    const [services, setServices] = useState({});
     const [serviceType, setServiceType] = useState("obstetricHistory");
-    const [serviceData, setServiceData] = useState({});
+    const { errors } = usePage().props; // Validation errors from the server
 
-    const serviceForms = {
-        obstetricHistory: [
-            {name: "history_of_preterm_birth", label: "History of Preterm Birth", type: "checkbox"},
-            {name: "gestational_age_at_delivery", label: "Gestational Age at Delivery", type: "number"},
-            {name: "previous_cervical_interventions", label: "Previous Cervical Interventions", type: "text"},
-            {name: "multiple_gestations", label: "Multiple Gestations", type: "checkbox"},
-            {name: "uterine_anomalies", label: "Uterine Anomalies", type: "text"},
-        ],
-        currentPregnancy: [
-            {name: "indication_for_screening", label: "Indication for Screening", type: "text"},
-            {name: "current_symptoms", label: "Current Symptoms", type: "text"},
-        ],
-        scanDetails: [
-            {name: "sonographer", label: "Sonographer", type: "text"},
-            {name: "ultrasound_machine_settings_used", label: "Ultrasound Machine Settings", type: "text"},
-            {name: "transducer_type", label: "Transducer Type", type: "text"},
-            {name: "patient_preparation", label: "Patient Preparation", type: "text"},
-        ],
-        cervicalAssessment: [
-            {name: "cervical_length", label: "Cervical Length (mm)", type: "number"},
-            {name: "internal_os_condition", label: "Internal OS Condition", type: "text"},
-            {name: "external_os_condition", label: "External OS Condition", type: "text"},
-            {name: "cervical_consistency", label: "Cervical Consistency", type: "text"},
-            {name: "presence_of_cervical_suture", label: "Presence of Cervical Suture", type: "checkbox"},
-            {name: "amniotic_fluid_membrane_protrusion", label: "Amniotic Fluid Membrane Protrusion", type: "checkbox"},
-        ],
-        riskAssessment: [
-            {name: "risk_stratification", label: "Risk Stratification", type: "text"},
-            {name: "biomarkers_tests", label: "Biomarkers Tests", type: "text"},
-        ],
-        interpretationAndRecommendations: [
-            {name: "cervical_length_interpretation", label: "Cervical Length Interpretation", type: "text"},
-            {name: "preventive_measures", label: "Preventive Measures", type: "text"},
-            {name: "patient_education_provided", label: "Patient Education Provided", type: "text"},
-        ],
-        followUp: [
-            {name: "frequency_of_cervical_monitoring", label: "Frequency of Cervical Monitoring", type: "text"},
-            {name: "referrals", label: "Referrals", type: "text"},
-            {name: "intervention_plan", label: "Intervention Plan", type: "text"},
-            {name: "scheduled_follow_up_date", label: "Scheduled Follow-Up Date", type: "date"},
-        ],
-        attachments: [
-            {name: "ultrasound_images", label: "Ultrasound Images", type: "file"},
-        ],
-        comments: [
-            {name: "additional_observations", label: "Additional Observations", type: "text"},
-            {name: "patient_compliance", label: "Patient Compliance", type: "checkbox"},
-        ],
-        signatures: [
-            {name: "sonographer_signature", label: "Sonographer Signature", type: "text"},
-            {name: "supervising_physician_signature", label: "Supervising Physician Signature", type: "text"},
-            {name: "date", label: "Date", type: "date"},
-        ],
-    };
-
+    // Handle input changes
     const handleChange = (e) => {
-        const {name, value, type, checked} = e.target;
-        setServiceData(prevState => ({
-            ...prevState,
-            [name]: type === "checkbox" ? checked : value,
-        }));
-    };
+        const { name, value, type, checked, files } = e.target;
 
-    const submitService = async (e) => {
-        console.log('adding service');
-        e.preventDefault();
-
-        try {
-            await axios.post(`/add-service/${patientId}`, {
-                service_type: serviceType,
-                service_data: serviceData
-            });
-            onSubmit();
-        } catch (error) {
-            console.error("Error adding service:", error);
+        if (type === "file") {
+            const file = files[0]; // Handle single file
+            setServices((prevServices) => ({
+                ...prevServices,
+                [serviceType]: {
+                    ...prevServices[serviceType],
+                    [name]: file, // Store the file
+                },
+            }));
+        } else {
+            setServices((prevServices) => ({
+                ...prevServices,
+                [serviceType]: {
+                    ...prevServices[serviceType],
+                    [name]: type === "checkbox" ? checked : value,
+                },
+            }));
         }
     };
 
+    // Handle form submission
+    const submitService = async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+
+        // Iterate over services and append each service data with service_type and service_data
+        Object.keys(services).forEach((serviceType) => {
+            const serviceData = services[serviceType];
+
+            // Append each key-value pair in service_data to FormData
+            Object.keys(serviceData).forEach((key) => {
+                if (serviceData[key] instanceof File) {
+                    formData.append(`services[${serviceType}][service_data][${key}]`, serviceData[key]);
+                } else {
+                    formData.append(`services[${serviceType}][service_data][${key}]`, serviceData[key] || "");
+                }
+            });
+
+            // Ensure the service_type is appended properly
+            formData.append(`services[${serviceType}][service_type]`, serviceType);
+        });
+
+        // Submit using Inertia.js router with formData
+        router.post(`/add-service/${patientId}`, formData, {
+            preserveScroll: true,
+            onSuccess: () => {
+                onSubmit();
+            },
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+    };
+
+
+
+
     return (
         <div>
-            <div className="space-y-4">
-                <h1 className="text-center text-xl font-bold text-gray-700 dark:text-gray-200">Add Service(s) for { patientName }</h1>
-                <form onSubmit={submitService} className="p-6 space-y-4 bg-white dark:bg-gray-800 rounded-lg w-full">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                        Select Service Type:
-                    </label>
-                    <select
-                        value={serviceType}
-                        onChange={(e) => setServiceType(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded"
-                    >
-                        {Object.keys(serviceForms).map((service, index) => (
-                            <option key={index} value={service}>
-                                {service.replace(/([A-Z])/g, " $1").toUpperCase()}
-                            </option>
-                        ))}
-                    </select>
+            <h1 className="text-center text-xl font-bold text-gray-700 dark:text-gray-200">
+                Add Service(s) for {patientName}
+            </h1>
 
-                    {/* Grid with 2 columns */}
-                    <div className="grid grid-cols-2 gap-5">
-                        {serviceForms[serviceType].map((field, index) => (
-                            <div key={index} className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                                    {field.label}
-                                </label>
-                                {field.type === "checkbox" ? (
-                                    <input
-                                        type="checkbox"
-                                        name={field.name}
-                                        onChange={handleChange}
-                                        className="w-6 h-6 align-middle"
-                                    />
-                                ) : (
-                                    <input
-                                        type={field.type}
-                                        name={field.name}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                        required={field.type !== "file"}
-                                    />
-                                )}
-                            </div>
-                        ))}
-                    </div>
+            <form onSubmit={submitService} className="p-6 space-y-4 bg-white dark:bg-gray-800 rounded-lg w-full">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    Select Service Type:
+                </label>
+                <select
+                    value={serviceType}
+                    onChange={(e) => setServiceType(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded"
+                >
+                    {Object.keys(serviceForms).map((service, index) => (
+                        <option key={index} value={service}>
+                            {service.replace(/([A-Z])/g, " $1").toUpperCase()}
+                        </option>
+                    ))}
+                </select>
 
-                    <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded">
-                        Add Service
-                    </button>
-                </form>
-            </div>
+                <div className="grid grid-cols-2 gap-5">
+                    {serviceForms[serviceType].map((field, index) => (
+                        <div key={index} className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                {field.label}
+                            </label>
+                            {field.type === "checkbox" ? (
+                                <input
+                                    type="checkbox"
+                                    name={field.name}
+                                    checked={!!(services[serviceType]?.[field.name] || false)}
+                                    onChange={handleChange}
+                                    className="w-6 h-6 align-middle"
+                                />
+                            ) : field.type === "file" ? (
+                                <input
+                                    type="file"
+                                    name={field.name}
+                                    onChange={handleChange}
+                                    className="w-full p-2 border border-gray-300 rounded"
+                                />
+                            ) : (
+                                <input
+                                    type={field.type}
+                                    name={field.name}
+                                    value={services[serviceType]?.[field.name] || ""}
+                                    onChange={handleChange}
+                                    className="w-full p-2 border border-gray-300 rounded"
+                                    required={field.type !== "file"}
+                                />
+                            )}
+
+                            {/* Display validation error for the specific field */}
+                            {errors[`services.${serviceType}.service_data.${field.name}`] && (
+                                <span className="text-red-500 text-sm">
+                                    {errors[`services.${serviceType}.service_data.${field.name}`]}
+                                </span>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                <button type="submit" className="px-4 py-2 bg-green-500 text-white rounded">
+                    Submit Service(s)
+                </button>
+            </form>
         </div>
     );
-
 };
 
 export default AddServiceComponent;
