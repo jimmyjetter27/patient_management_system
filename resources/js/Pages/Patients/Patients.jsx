@@ -246,7 +246,7 @@ const Patient = ({auth}) => {
                         </button>
                     </div>
                     <div>
-                        <button
+                        <button className="text-yellow-600 hover:text-yellow-900"
                             onClick={() => confirmPatientUpdate({
                                 id: row.id,
                                 name: row.name,
