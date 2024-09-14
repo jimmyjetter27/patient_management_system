@@ -55,7 +55,7 @@ const serviceForms = {
     ],
 };
 
-const ServiceFormComponent = ({ onSubmit, onCancel }) => {
+const ServiceFormComponent = ({ onSubmit, onCancel, initialData }) => {
     const [formData, setFormData] = useState(() => {
         const savedFormData = localStorage.getItem("serviceFormData");
         return savedFormData ? JSON.parse(savedFormData) : {};

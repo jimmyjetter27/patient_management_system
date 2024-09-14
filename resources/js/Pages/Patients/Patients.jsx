@@ -53,10 +53,11 @@ const Patient = ({auth}) => {
     // }, [serviceData]);
 
     // Function to handle opening the service form modal
-    const handleOpenServiceForm = () => {
+    const handleOpenServiceForm = (serviceKey, serviceData) => {
         const savedData = localStorage.getItem("serviceFormData");
         const formData = savedData ? JSON.parse(savedData) : {}; // Fetch the saved data from localStorage
 
+        setCurrentService(serviceKey);
         setFormData(formData); // Set the formData in the parent state
         setShowServiceForm(true); // Open the modal to show the form
     };
@@ -72,6 +73,13 @@ const Patient = ({auth}) => {
         // Save the service data in state
         setServiceData(formData); // Save the entire form data object in the state
         setShowServiceForm(false);
+    };
+
+    const handleDeleteService = (serviceKey) => {
+        const updatedServiceData = { ...serviceData };
+        delete updatedServiceData[serviceKey]; // Remove the selected service
+        setServiceData(updatedServiceData); // Update the state
+
     };
 
 
@@ -426,7 +434,6 @@ const Patient = ({auth}) => {
                 </form>
             </Modal>
             <Modal show={confirmingPatientUpdate} onClose={closeUpdateModal}>
-
                 <form onSubmit={updatePatient} className="p-6 space-y-4 bg-white dark:bg-gray-800 rounded-lg">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         Update {selectedPatient.name}?
@@ -537,6 +544,32 @@ const Patient = ({auth}) => {
 
                     </div>
                     {/*End of Grid*/}
+
+                    <div className="mt-4">
+                        <h3 className="text-lg font-semibold">Current Services</h3>
+                        <ul>
+                            {Object.keys(serviceData).map((serviceKey, index) => (
+                                <li key={index} className="flex justify-between">
+                                    <span>{serviceKey}</span>
+                                    <div className="flex space-x-2">
+                                        <button
+                                            className="text-blue-600 hover:text-blue-900"
+                                            onClick={() => handleOpenServiceForm(serviceKey, serviceData[serviceKey])}
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            className="text-red-600 hover:text-red-900"
+                                            onClick={() => handleDeleteService(serviceKey)}
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
 
                     <div className="mt-6 flex justify-end">
                         <SecondaryButton onClick={closeUpdateModal}>Cancel</SecondaryButton>
