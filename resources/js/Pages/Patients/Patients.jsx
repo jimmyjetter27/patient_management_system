@@ -136,6 +136,7 @@ const Patient = ({auth}) => {
     const confirmPatientUpdate = (patient) => {
         setSelectedPatient(patient);
         setValues({
+            id: patient.id,
             name: patient.name,
             age: patient.age,
             hospital_id: patient.hospital_id,
@@ -640,7 +641,7 @@ const Patient = ({auth}) => {
 
                     <div className="space-x-2">
                         <SecondaryButton
-                            onClick={() => handleOpenUpdateServiceForm(selectedPatient.id)}
+                            onClick={() => handleOpenUpdateServiceForm(values.id)}
                         >
                             Update Service(s)
                         </SecondaryButton>
