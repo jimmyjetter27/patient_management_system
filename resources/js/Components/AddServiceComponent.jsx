@@ -44,9 +44,9 @@ const AddServiceComponent = ({ patientId, patientName, onSubmit }) => {
             // Append each key-value pair in service_data to FormData
             Object.keys(serviceData).forEach((key) => {
                 if (serviceData[key] instanceof File) {
-                    formData.append(`services[${serviceType}][${key}]`, serviceData[key]);
+                    formData.append(`services[${serviceType}][service_data][${key}]`, serviceData[key]);
                 } else {
-                    formData.append(`services[${serviceType}][${key}]`, serviceData[key] || "");
+                    formData.append(`services[${serviceType}][service_data][${key}]`, serviceData[key] || "");
                 }
             });
 
@@ -56,7 +56,7 @@ const AddServiceComponent = ({ patientId, patientName, onSubmit }) => {
 
         // Log the FormData to inspect what's being sent
         formData.forEach((value, key) => {
-            console.log(key, value);
+            console.log('logging formDatas: ', key, value);
         });
 
         // Submit using Inertia.js router with formData
@@ -70,7 +70,6 @@ const AddServiceComponent = ({ patientId, patientName, onSubmit }) => {
             },
         });
     };
-
 
     return (
         <div>
@@ -114,7 +113,6 @@ const AddServiceComponent = ({ patientId, patientName, onSubmit }) => {
                                     name={field.name}
                                     onChange={handleChange}
                                     className="w-full p-2 border border-gray-300 rounded"
-                                    required
                                 />
                             ) : (
                                 <input

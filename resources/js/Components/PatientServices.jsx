@@ -43,7 +43,17 @@ const PatientServices = ({ patientId }) => {
                         <ul className="mt-2 text-gray-600 dark:text-gray-300">
                             {Object.entries(service.service_data).map(([key, value], index) => (
                                 <li key={index}>
-                                    <strong>{key.replace(/_/g, " ")}:</strong> {value || "N/A"}
+                                    <strong>{key.replace(/_/g, " ")}:</strong>{" "}
+                                    {/* Check if it's an image and render <img> */}
+                                    {typeof value === 'string' && value.startsWith('/storage/') ? (
+                                        <img
+                                            src={value}
+                                            alt="Uploaded attachment"
+                                            className="mt-2 w-32 h-32 object-cover border rounded"
+                                        />
+                                    ) : (
+                                        value || "N/A"
+                                    )}
                                 </li>
                             ))}
                         </ul>
