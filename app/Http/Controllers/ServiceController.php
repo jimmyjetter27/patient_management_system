@@ -6,6 +6,7 @@ use App\Http\Requests\StoreServiceRequest;
 use App\Http\Resources\PatientServiceResource;
 use App\Models\Patient;
 use App\Models\PatientService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -126,6 +127,27 @@ class ServiceController extends Controller
         }
     }
 
+
+    public function getTodayServices($id)
+    {
+        $today = Carbon::today();
+
+        $services = PatientService::where('patient_id', $id)
+            ->whereDate('created_at', $today)
+            ->get();
+
+        if ($services->isEmpty()) {
+            return response()->json([
+                'status' => 'no_services',
+                'message' => 'No services found for today.'
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'services' => PatientServiceResource::collection($services),
+        ]);
+    }
 
 
 }

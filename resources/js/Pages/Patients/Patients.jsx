@@ -11,6 +11,9 @@ import ServiceFormComponent from "@/Components/ServiceFormComponent.jsx";
 import AddServiceComponent from "@/Components/AddServiceComponent.jsx";
 import PatientServices from "@/Components/PatientServices.jsx";
 import UpdateServiceComponent from "@/Components/UpdateServiceComponent.jsx";
+import ApplicationLogo from '@/Components/ApplicationLogo';
+import axios from 'axios';
+import PatientPrintComponent from "@/Components/PatientPrintComponent.jsx";
 
 const Patient = ({auth}) => {
     const [patientData, setPatientData] = useState([]);
@@ -28,6 +31,9 @@ const Patient = ({auth}) => {
     const [confirmingPatientStore, setConfirmingPatientStore] = useState(false);
     const [confirmingPatientUpdate, setConfirmingPatientUpdate] = useState(false);
     const [confirmingPatientDeletion, setConfirmingPatientDeletion] = useState(false);
+
+    const [printModalOpen, setPrintModalOpen] = useState(false);
+    const [printData, setPrintData] = useState(null);
 
     const closePatientStore = () => setConfirmingPatientStore(false);
 
@@ -60,6 +66,62 @@ const Patient = ({auth}) => {
     // useEffect(() => {
     //     localStorage.setItem("serviceFormData", JSON.stringify(serviceData));
     // }, [serviceData]);
+
+    // const handlePrint = async (patientId, patientName) => {
+    //     setLoading(true);
+    //
+    //     try {
+    //         const response = await axios.get(`api/patient/${patientId}/services/today`);
+    //         if (response.data.status === 'no_services') {
+    //             alert(response.data.message);
+    //         } else {
+    //             console.log('print patient name: ', patientName);
+    //             console.log('print stuff: ', response.data.services);
+    //             setPrintData({
+    //                 patientName: patientName,
+    //                 services: response.data.services,
+    //             });
+    //             setPrintModalOpen(true);  // Open the print modal
+    //         }
+    //     } catch (error) {
+    //         console.error('Error fetching services:', error);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+    const handlePrint = async (patientId, patientName) => {
+
+        try {
+                    const response = await axios.get(`api/patient/${patientId}/services/today`);
+                    if (response.data.status === 'no_services') {
+                        alert(response.data.message);
+                    } else {
+                        console.log('print patient name: ', patientName);
+                        console.log('print stuff: ', response.data.services);
+                        setPrintData({
+                            patientName: patientName,
+                            services: response.data.services,
+                        });
+                        setPrintModalOpen(true);  // Open the print modal
+                    }
+                } catch (error) {
+                    console.error('Error fetching services:', error);
+                }
+        // Trigger the print after data is set
+        setTimeout(() => {
+            window.print();
+        }, 500); // Small delay for rendering
+    };
+
+
+
+    const triggerPrint = () => {
+        // Print the content inside the modal
+        setTimeout(() => {
+            window.print();
+        }, 500);  // Allow the modal content to render before triggering the print
+    };
 
     const handleOpenPatientServicesModal = (patient) => {
         setSelectedPatient(patient);
@@ -103,13 +165,11 @@ const Patient = ({auth}) => {
     };
 
     const handleDeleteService = (serviceKey) => {
-        const updatedServiceData = { ...serviceData };
+        const updatedServiceData = {...serviceData};
         delete updatedServiceData[serviceKey]; // Remove the selected service
         setServiceData(updatedServiceData); // Update the state
 
     };
-
-
 
 
     const handleServiceCancel = (selectedService) => {
@@ -242,8 +302,6 @@ const Patient = ({auth}) => {
     };
 
 
-
-
     const columns = useMemo(() => [
         {
             name: 'Name',
@@ -278,15 +336,29 @@ const Patient = ({auth}) => {
             cell: (row) => (
                 <div className="flex justify-center space-x-2">
                     <div>
+                        <button className="text-blue-600 hover:text-blue-900"
+                                onClick={() => handlePrint(row.id, row.name)}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                                 stroke="currentColor" className="w-6 h-6">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div>
                         <button className="text-indigo-600 hover:text-indigo-900"
                                 onClick={() => handleOpenPatientServicesModal({
                                     id: row.id,
                                     name: row.name,
                                 })}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                                 stroke="currentColor" className="w-6 h-6">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
                             </svg>
                         </button>
                     </div>
@@ -297,8 +369,9 @@ const Patient = ({auth}) => {
                                     name: row.name,
                                 })}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                                 stroke="currentColor" className="w-6 h-6">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
                             </svg>
                         </button>
                     </div>
@@ -680,10 +753,11 @@ const Patient = ({auth}) => {
                 />
             </Modal>
             <Modal show={showAddServiceForm} onClose={() => setShowAddServiceForm(false)}>
-                <AddServiceComponent patientId={selectedPatient.id} patientName={selectedPatient.name} onSubmit={() => setShowAddServiceForm(false)} />
+                <AddServiceComponent patientId={selectedPatient.id} patientName={selectedPatient.name}
+                                     onSubmit={() => setShowAddServiceForm(false)}/>
             </Modal>
             <Modal show={showPatientServicesComponent} onClose={() => setShowPatientServicesComponent(false)}>
-                <PatientServices patientId={selectedPatient.id} />
+                <PatientServices patientId={selectedPatient.id}/>
             </Modal>
             <Modal show={showUpdateServiceForm} onClose={() => setShowUpdateServiceForm(false)}>
                 <UpdateServiceComponent
@@ -692,6 +766,49 @@ const Patient = ({auth}) => {
                     onSubmit={handleServiceUpdate} // Function to handle form submission
                 />
             </Modal>
+            {/* Modal for printing */}
+            <Modal show={printModalOpen} onClose={() => setPrintModalOpen(false)}>
+                {printData && (
+                    <PatientPrintComponent
+                        patientName={printData.patientName}
+                        services={printData.services}
+                    />
+                )}
+                <div className="mt-4 flex justify-end">
+                    <button
+                        className="bg-blue-500 text-white py-2 px-4 rounded"
+                        onClick={triggerPrint}
+                    >
+                        Print
+                    </button>
+                    <button
+                        className="ml-2 bg-gray-500 text-white py-2 px-4 rounded"
+                        onClick={() => setPrintModalOpen(false)}
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </Modal>
+
+            {/* Style to ensure only the modal content gets printed */}
+            <style>{`
+                @media print {
+                    body * {
+                        visibility: hidden;
+                    }
+
+                    .printable-area, .printable-area * {
+                        visibility: visible;
+                    }
+
+                    .printable-area {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                    }
+                }
+            `}</style>
         </>
     );
 }

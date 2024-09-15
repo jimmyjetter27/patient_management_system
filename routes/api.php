@@ -43,8 +43,8 @@ Route::middleware([\App\Http\Middleware\ForceJson::class])->group(function () {
     Route::middleware('web')->group(function () {
         Route::get('users', [UserController::class, 'index']);
         Route::get('patients', [\App\Http\Controllers\PatientController::class, 'index']);
+        Route::get('patient/{id}/services/today', [\App\Http\Controllers\ServiceController::class, 'getTodayServices']);
         Route::get('patient-services/{patient}', [\App\Http\Controllers\ServiceController::class, 'patientServices'])->name('patient-services');
-
     });
 
 });
