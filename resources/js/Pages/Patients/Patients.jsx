@@ -63,12 +63,15 @@ const Patient = ({auth}) => {
 
     const handleOpenServiceForm = (serviceKey, serviceData) => {
         const savedData = localStorage.getItem("serviceFormData");
-        const formData = savedData ? JSON.parse(savedData) : {}; // Fetch the saved data from localStorage
+        const formData = savedData ? JSON.parse(savedData) : {};
 
         setCurrentService(serviceKey);
         setFormData(formData); // Set the formData in the parent state
+
+        // Ensure we do not set the value for file inputs
         setShowServiceForm(true); // Open the modal to show the form
     };
+
 
     const handleOpenAddServiceForm = (patient) => {
         setSelectedPatient(patient);
@@ -79,7 +82,8 @@ const Patient = ({auth}) => {
         console.log('formData inside handleServiceSubmit: ', formData);
 
         // Save the service data in state
-        setServiceData(formData); // Save the entire form data object in the state
+        setServiceData(formData);
+        fetchPatients(1);
         setShowServiceForm(false);
     };
 
@@ -462,16 +466,16 @@ const Patient = ({auth}) => {
                             <div>{errors.referring_physician}</div>}</span>
                     </div>
 
-                    <div className="space-x-2">
-                        <SecondaryButton onClick={handleOpenServiceForm}
-                            // onClick={() => {
-                            // setCurrentService('obstetricHistory');
-                            // setShowServiceForm(true);
+                    {/*<div className="space-x-2">*/}
+                    {/*    <SecondaryButton onClick={handleOpenServiceForm}*/}
+                    {/*        // onClick={() => {*/}
+                    {/*        // setCurrentService('obstetricHistory');*/}
+                    {/*        // setShowServiceForm(true);*/}
 
-                        >
-                            Add Service
-                        </SecondaryButton>
-                    </div>
+                    {/*    >*/}
+                    {/*        Add Service*/}
+                    {/*    </SecondaryButton>*/}
+                    {/*</div>*/}
 
                     <div className="mt-6 flex justify-end">
                         <SecondaryButton onClick={closePatientStore}>Cancel</SecondaryButton>

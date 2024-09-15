@@ -124,12 +124,23 @@ const ServiceFormComponent = ({ onSubmit, onCancel, initialData }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Retrieve all saved service data from localStorage and pass it to the parent component
-        const allServiceData = localStorage.getItem("serviceFormData");
-        const parsedData = allServiceData ? JSON.parse(allServiceData) : {};
+        const formDataToSubmit = new FormData(); // Create a new FormData object
 
-        onSubmit(parsedData); // Pass all service data to the parent component
+        // Loop through the service form data and append each item to the FormData object
+        Object.keys(formData).forEach((key) => {
+            if (formData[key] instanceof File) {
+                // If it's a file, append it as a file input
+                formDataToSubmit.append(key, formData[key]);
+            } else {
+                // Otherwise, append the normal input value
+                formDataToSubmit.append(key, formData[key]);
+            }
+        });
+
+        // Send the form data using the appropriate method (e.g., axios, fetch, or Inertia.js)
+        onSubmit(formDataToSubmit); // Pass the FormData object to the parent component
     };
+
 
     const formatLabel = (label) => {
         return label
@@ -176,7 +187,7 @@ const ServiceFormComponent = ({ onSubmit, onCancel, initialData }) => {
                                 <input
                                     type={field.type}
                                     name={field.name}
-                                    value={formData[field.name] || ""} // Ensure text/number fields are handled correctly
+                                    // value={formData[field.name] || ""} // Ensure text/number fields are handled correctly
                                     onChange={handleChange}
                                     className="w-full p-2 border border-gray-300 rounded"
                                     required={field.type !== "file"}

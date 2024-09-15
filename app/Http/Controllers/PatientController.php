@@ -64,78 +64,16 @@ class PatientController extends Controller
 
         // Define all services and their respective models and fields
         $services = [
-            'obstetric_history' => [
-                'fields' => [
-                    'history_of_preterm_birth',
-                    'gestational_age_at_delivery',
-                    'previous_cervical_interventions',
-                    'multiple_gestations',
-                    'uterine_anomalies',
-                ]
-            ],
-            'current_pregnancy' => [
-                'fields' => [
-                    'indication_for_screening',
-                    'current_symptoms'
-                ]
-            ],
-            'scan_details' => [
-                'fields' => [
-                    'sonographer',
-                    'ultrasound_machine_settings_used',
-                    'transducer_type',
-                    'patient_preparation'
-                ]
-            ],
-            'cervical_assessment' => [
-                'fields' => [
-                    'cervical_length',
-                    'internal_os_condition',
-                    'external_os_condition',
-                    'cervical_consistency',
-                    'presence_of_cervical_suture',
-                    'amniotic_fluid_membrane_protrusion'
-                ]
-            ],
-            'risk_assessment' => [
-                'fields' => [
-                    'risk_stratification',
-                    'biomarkers_tests'
-                ]
-            ],
-            'interpretation_and_recommendations' => [
-                'fields' => [
-                    'cervical_length_interpretation',
-                    'preventive_measures',
-                    'patient_education_provided'
-                ]
-            ],
-            'follow_up' => [
-                'fields' => [
-                    'frequency_of_cervical_monitoring',
-                    'referrals',
-                    'intervention_plan',
-                    'scheduled_follow_up_date'
-                ]
-            ],
-            'attachments' => [
-                'fields' => [
-                    'ultrasound_images'
-                ]
-            ],
-            'comments' => [
-                'fields' => [
-                    'additional_observations',
-                    'patient_compliance'
-                ]
-            ],
-            'signatures' => [
-                'fields' => [
-                    'sonographer_signature',
-                    'supervising_physician_signature',
-                    'date'
-                ]
-            ]
+            'obstetric_history' => ['fields' => ['history_of_preterm_birth', 'gestational_age_at_delivery', 'previous_cervical_interventions', 'multiple_gestations', 'uterine_anomalies']],
+            'current_pregnancy' => ['fields' => ['indication_for_screening', 'current_symptoms']],
+            'scan_details' => ['fields' => ['sonographer', 'ultrasound_machine_settings_used', 'transducer_type', 'patient_preparation']],
+            'cervical_assessment' => ['fields' => ['cervical_length', 'internal_os_condition', 'external_os_condition', 'cervical_consistency', 'presence_of_cervical_suture', 'amniotic_fluid_membrane_protrusion']],
+            'risk_assessment' => ['fields' => ['risk_stratification', 'biomarkers_tests']],
+            'interpretation_and_recommendations' => ['fields' => ['cervical_length_interpretation', 'preventive_measures', 'patient_education_provided']],
+            'follow_up' => ['fields' => ['frequency_of_cervical_monitoring', 'referrals', 'intervention_plan', 'scheduled_follow_up_date']],
+            'attachments' => ['fields' => ['ultrasound_images']],
+            'comments' => ['fields' => ['additional_observations', 'patient_compliance']],
+            'signatures' => ['fields' => ['sonographer_signature', 'supervising_physician_signature', 'date']]
         ];
 
         // Handle file uploads separately for attachments
@@ -150,7 +88,7 @@ class PatientController extends Controller
             $serviceData = [];
 
             // If there's data for this service in the request, process it
-            if ($request->has($serviceKey) && !empty(array_filter($request->input($serviceKey)))) {
+            if ($request->has($serviceKey) && is_array($request->input($serviceKey)) && !empty(array_filter($request->input($serviceKey)))) {
                 foreach ($serviceInfo['fields'] as $field) {
                     $serviceData[$field] = $request->input("{$serviceKey}.{$field}");
                 }
