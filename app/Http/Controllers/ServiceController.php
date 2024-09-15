@@ -71,4 +71,38 @@ class ServiceController extends Controller
     {
         return PatientServiceResource::collection($patient->services);
     }
+
+    public function update(Request $request, PatientService $service)
+    {
+        // Ensure the service exists
+        if (!$service) {
+            return redirect()->back()->with(['error_message' => 'Service not found']);
+        }
+
+        // Decode the existing service data
+        $serviceData = json_decode($service->service_data, true);
+
+        // Define the fields you expect in the request
+        $fields = $request->except(['_method', '_token', 'ultrasound_images']);
+
+        // Update the service data with any new input
+        foreach ($fields as $key => $value) {
+            $serviceData[$key] = $value;
+        }
+
+        // Handle file uploads separately (e.g., for ultrasound images)
+        if ($request->hasFile('ultrasound_images')) {
+            $file = $request->file('ultrasound_images');
+            $filePath = $file->store('ultrasound_images', 'public'); // Save the file to public storage
+            $serviceData['ultrasound_images'] = $filePath; // Update the file path in service data
+        }
+
+        // Update the service with the modified data
+        $service->update([
+            'service_data' => json_encode($serviceData),  // Re-encode the service data as JSON
+        ]);
+
+        return redirect()->back()->with(['success_message' => 'Service(s) has been updated successfully']);
+    }
+
 }

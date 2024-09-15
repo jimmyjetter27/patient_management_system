@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/patients/{patient}/delete', [\App\Http\Controllers\PatientController::class, 'destroy'])->name('delete-patient');
 
     Route::post('add-service/{patient}', [\App\Http\Controllers\ServiceController::class, 'store'])->name('store-service');
+    Route::put('update-service/{patient_service}', [\App\Http\Controllers\ServiceController::class, 'update'])->name('update-service');
 });
 
 

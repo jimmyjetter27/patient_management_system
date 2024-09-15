@@ -10,6 +10,7 @@ import DangerButton from "@/Components/DangerButton.jsx";
 import ServiceFormComponent from "@/Components/ServiceFormComponent.jsx";
 import AddServiceComponent from "@/Components/AddServiceComponent.jsx";
 import PatientServices from "@/Components/PatientServices.jsx";
+import UpdateServiceComponent from "@/Components/UpdateServiceComponent.jsx";
 
 const Patient = ({auth}) => {
     const [patientData, setPatientData] = useState([]);
@@ -58,7 +59,8 @@ const Patient = ({auth}) => {
 
     const handleOpenPatientServicesModal = (patient) => {
         setSelectedPatient(patient);
-        setShowPatientServicesComponent(true);
+        // setShowPatientServicesComponent(true);
+        setShowServiceForm(true);
     }
 
     const handleOpenServiceForm = (serviceKey, serviceData) => {
@@ -599,29 +601,39 @@ const Patient = ({auth}) => {
                     {/*End of Grid*/}
 
                     <div className="mt-4">
-                        <h3 className="text-lg font-semibold">Current Services</h3>
-                        <ul>
-                            {Object.keys(serviceData).map((serviceKey, index) => (
-                                <li key={index} className="flex justify-between">
-                                    <span>{serviceKey}</span>
-                                    <div className="flex space-x-2">
-                                        <button
-                                            className="text-blue-600 hover:text-blue-900"
-                                            onClick={() => handleOpenServiceForm(serviceKey, serviceData[serviceKey])}
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            className="text-red-600 hover:text-red-900"
-                                            onClick={() => handleDeleteService(serviceKey)}
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                        <SecondaryButton onClick={handleOpenServiceForm}
+                                // onClick={() => {
+                                // setCurrentService('obstetricHistory');
+                                // setShowServiceForm(true);
+
+                            >
+                                Update Service
+                            </SecondaryButton>
                     </div>
+                    {/*<div className="mt-4">*/}
+                    {/*    <h3 className="text-lg font-semibold">Current Services</h3>*/}
+                    {/*    <ul>*/}
+                    {/*        {Object.keys(serviceData).map((serviceKey, index) => (*/}
+                    {/*            <li key={index} className="flex justify-between">*/}
+                    {/*                <span>{serviceKey}</span>*/}
+                    {/*                <div className="flex space-x-2">*/}
+                    {/*                    <button*/}
+                    {/*                        className="text-blue-600 hover:text-blue-900"*/}
+                    {/*                        onClick={() => handleOpenServiceForm(serviceKey, serviceData[serviceKey])}*/}
+                    {/*                    >*/}
+                    {/*                        Edit*/}
+                    {/*                    </button>*/}
+                    {/*                    <button*/}
+                    {/*                        className="text-red-600 hover:text-red-900"*/}
+                    {/*                        onClick={() => handleDeleteService(serviceKey)}*/}
+                    {/*                    >*/}
+                    {/*                        Delete*/}
+                    {/*                    </button>*/}
+                    {/*                </div>*/}
+                    {/*            </li>*/}
+                    {/*        ))}*/}
+                    {/*    </ul>*/}
+                    {/*</div>*/}
 
 
                     <div className="mt-6 flex justify-end">
@@ -659,8 +671,8 @@ const Patient = ({auth}) => {
             <Modal show={showAddServiceForm} onClose={() => setShowAddServiceForm(false)}>
                 <AddServiceComponent patientId={selectedPatient.id} patientName={selectedPatient.name} onSubmit={() => setShowAddServiceForm(false)} />
             </Modal>
-            <Modal show={showPatientServicesComponent} onClose={() => setShowPatientServicesComponent(false)}>
-                <PatientServices patientId={selectedPatient.id} />
+            <Modal show={showAddServiceForm} onClose={() => setShowAddServiceForm(false)}>
+                <UpdateServiceComponent  />
             </Modal>
         </>
     );
