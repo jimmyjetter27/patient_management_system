@@ -10,6 +10,7 @@ import DangerButton from "@/Components/DangerButton.jsx";
 import ServiceFormComponent from "@/Components/ServiceFormComponent.jsx";
 import AddServiceComponent from "@/Components/AddServiceComponent.jsx";
 import PatientServices from "@/Components/PatientServices.jsx";
+import UpdateServiceComponent from "@/Components/UpdateServiceComponent.jsx";
 
 const Patient = ({auth}) => {
     const [patientData, setPatientData] = useState([]);
@@ -19,6 +20,10 @@ const Patient = ({auth}) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const {appUrl, errors} = usePage().props;
+
+    const [showUpdateServiceForm, setShowUpdateServiceForm] = useState(false);
+    const [selectedService, setSelectedService] = useState(null);
+    const [currentServiceData, setCurrentServiceData] = useState({});
 
     const [confirmingPatientStore, setConfirmingPatientStore] = useState(false);
     const [confirmingPatientUpdate, setConfirmingPatientUpdate] = useState(false);
@@ -77,6 +82,16 @@ const Patient = ({auth}) => {
         setSelectedPatient(patient);
         setShowAddServiceForm(true);
     }
+
+    const handleOpenUpdateServiceForm = (patientId) => {
+        setSelectedPatient(patientId); // Store the ID of the patient you are updating services for
+        setShowUpdateServiceForm(true); // Show the modal
+    };
+
+    const handleServiceUpdate = () => {
+        setShowUpdateServiceForm(false);
+        fetchPatients(1); // Optionally, refresh the patient data after the update
+    };
 
     const handleServiceSubmit = (formData) => {
         console.log('formData inside handleServiceSubmit: ', formData);
@@ -598,31 +613,38 @@ const Patient = ({auth}) => {
                     </div>
                     {/*End of Grid*/}
 
-                    <div className="mt-4">
-                        <h3 className="text-lg font-semibold">Current Services</h3>
-                        <ul>
-                            {Object.keys(serviceData).map((serviceKey, index) => (
-                                <li key={index} className="flex justify-between">
-                                    <span>{serviceKey}</span>
-                                    <div className="flex space-x-2">
-                                        <button
-                                            className="text-blue-600 hover:text-blue-900"
-                                            onClick={() => handleOpenServiceForm(serviceKey, serviceData[serviceKey])}
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            className="text-red-600 hover:text-red-900"
-                                            onClick={() => handleDeleteService(serviceKey)}
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+                    {/*<div className="mt-4">*/}
+                    {/*    <h3 className="text-lg font-semibold">Current Services</h3>*/}
+                    {/*    <ul>*/}
+                    {/*        {Object.keys(serviceData).map((serviceKey, index) => (*/}
+                    {/*            <li key={index} className="flex justify-between">*/}
+                    {/*                <span>{serviceKey}</span>*/}
+                    {/*                <div className="flex space-x-2">*/}
+                    {/*                    <button*/}
+                    {/*                        className="text-blue-600 hover:text-blue-900"*/}
+                    {/*                        onClick={() => handleOpenServiceForm(serviceKey, serviceData[serviceKey])}*/}
+                    {/*                    >*/}
+                    {/*                        Edit*/}
+                    {/*                    </button>*/}
+                    {/*                    <button*/}
+                    {/*                        className="text-red-600 hover:text-red-900"*/}
+                    {/*                        onClick={() => handleDeleteService(serviceKey)}*/}
+                    {/*                    >*/}
+                    {/*                        Delete*/}
+                    {/*                    </button>*/}
+                    {/*                </div>*/}
+                    {/*            </li>*/}
+                    {/*        ))}*/}
+                    {/*    </ul>*/}
+                    {/*</div>*/}
 
+                    <div className="space-x-2">
+                        <SecondaryButton
+                            onClick={() => handleOpenUpdateServiceForm(selectedPatient.id)}
+                        >
+                            Update Service(s)
+                        </SecondaryButton>
+                    </div>
 
                     <div className="mt-6 flex justify-end">
                         <SecondaryButton onClick={closeUpdateModal}>Cancel</SecondaryButton>
@@ -661,6 +683,13 @@ const Patient = ({auth}) => {
             </Modal>
             <Modal show={showPatientServicesComponent} onClose={() => setShowPatientServicesComponent(false)}>
                 <PatientServices patientId={selectedPatient.id} />
+            </Modal>
+            <Modal show={showUpdateServiceForm} onClose={() => setShowUpdateServiceForm(false)}>
+                <UpdateServiceComponent
+                    patientId={selectedPatient} // Pass the patient ID only
+                    onClose={() => setShowUpdateServiceForm(false)} // Close modal function
+                    onSubmit={handleServiceUpdate} // Function to handle form submission
+                />
             </Modal>
         </>
     );
