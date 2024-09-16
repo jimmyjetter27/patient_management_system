@@ -1,9 +1,9 @@
 import React from 'react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 
-const PatientPrintComponent = ({ patientName, services }) => {
+const PatientPrintComponent = React.forwardRef(({ patientName, services }, ref) => {
     return (
-        <div className="printable-area">
+        <div ref={ref} className="printable-area">
             <div className="header">
                 <div className="logo-container">
                     <ApplicationLogo className="logo" />
@@ -89,13 +89,13 @@ const PatientPrintComponent = ({ patientName, services }) => {
                     }
 
                     .service-detail {
-                        margin-left: 20px;
+                       h margin-left: 20px;
                         font-size: 14px;
                     }
                 }
             `}</style>
         </div>
     );
-};
+});
 
 export default PatientPrintComponent;
