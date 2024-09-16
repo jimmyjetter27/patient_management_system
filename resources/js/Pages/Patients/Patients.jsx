@@ -426,7 +426,21 @@ const Patient = ({auth}) => {
 
     const handlePageChange = (page) => fetchPatients(page);
     const handleSearchChange = (e) => setSearchTerm(e.target.value);
-    const handlePerRowsChange = async (newPerPage, page) => fetchPatients(page);
+    // const handlePerRowsChange = async (newPerPage, page) => fetchPatients(page);
+
+    const handlePerRowsChange = async (newPerPage, page) => {
+        setLoading(true);
+        const response = await axios.get(`${appUrl}/api/patients?page=${page}&per_page=${newPerPage}`, {
+            params: {
+                filter: {
+                    name: searchTerm,
+                },
+            },
+        });
+        setPatientData(response.data.data);
+        setTotalRows(response.data.meta.total);
+        setLoading(false);
+    };
 
     useEffect(() => {
         fetchPatients(1);
