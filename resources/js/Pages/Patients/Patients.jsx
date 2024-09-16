@@ -1,6 +1,6 @@
 import ParentLayout from '@/Layouts/ParentLayout';
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.jsx";
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import DataTable from 'react-data-table-component';
 import {Head, router, useForm, usePage} from "@inertiajs/react";
 import Modal from "@/Components/Modal.jsx";
@@ -14,6 +14,7 @@ import UpdateServiceComponent from "@/Components/UpdateServiceComponent.jsx";
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import axios from 'axios';
 import PatientPrintComponent from "@/Components/PatientPrintComponent.jsx";
+import { useReactToPrint } from 'react-to-print';
 
 const Patient = ({auth}) => {
     const [patientData, setPatientData] = useState([]);
@@ -32,8 +33,9 @@ const Patient = ({auth}) => {
     const [confirmingPatientUpdate, setConfirmingPatientUpdate] = useState(false);
     const [confirmingPatientDeletion, setConfirmingPatientDeletion] = useState(false);
 
-    const [printModalOpen, setPrintModalOpen] = useState(false);
     const [printData, setPrintData] = useState(null);
+    const [printModalOpen, setPrintModalOpen] = useState(false);
+    const printComponentRef = useRef();
 
     const closePatientStore = () => setConfirmingPatientStore(false);
 
@@ -91,37 +93,28 @@ const Patient = ({auth}) => {
     // };
 
     const handlePrint = async (patientId, patientName) => {
-
         try {
-                    const response = await axios.get(`api/patient/${patientId}/services/today`);
-                    if (response.data.status === 'no_services') {
-                        alert(response.data.message);
-                    } else {
-                        console.log('print patient name: ', patientName);
-                        console.log('print stuff: ', response.data.services);
-                        setPrintData({
-                            patientName: patientName,
-                            services: response.data.services,
-                        });
-                        setPrintModalOpen(true);  // Open the print modal
-                    }
-                } catch (error) {
-                    console.error('Error fetching services:', error);
-                }
-        // Trigger the print after data is set
-        setTimeout(() => {
-            window.print();
-        }, 500); // Small delay for rendering
+            console.log('patientID: ', patientId);
+            const response = await axios.get(`api/patient/${patientId}/services/today`);
+            if (response.data.status === 'no_services') {
+                alert(response.data.message); // No services found
+            } else {
+                setPrintData({
+                    patientName: patientName,
+                    services: response.data.services,
+                });
+                setPrintModalOpen(true);  // Open the print modal
+            }
+        } catch (error) {
+            console.error('Error fetching services:', error);
+        }
     };
 
+    const triggerPrint = useReactToPrint({
+        content: () => printComponentRef.current,
+        onAfterPrint: () => setPrintModalOpen(false), // Close the modal after printing
+    });
 
-
-    const triggerPrint = () => {
-        // Print the content inside the modal
-        setTimeout(() => {
-            window.print();
-        }, 500);  // Allow the modal content to render before triggering the print
-    };
 
     const handleOpenPatientServicesModal = (patient) => {
         setSelectedPatient(patient);
@@ -336,7 +329,7 @@ const Patient = ({auth}) => {
             cell: (row) => (
                 <div className="flex justify-center space-x-2">
                     <div>
-                        <button className="text-blue-600 hover:text-blue-900"
+                        <button className="text-gray-600 hover:text-gray-900"
                                 onClick={() => handlePrint(row.id, row.name)}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
@@ -766,49 +759,26 @@ const Patient = ({auth}) => {
                     onSubmit={handleServiceUpdate} // Function to handle form submission
                 />
             </Modal>
-            {/* Modal for printing */}
-            <Modal show={printModalOpen} onClose={() => setPrintModalOpen(false)}>
-                {printData && (
-                    <PatientPrintComponent
-                        patientName={printData.patientName}
-                        services={printData.services}
-                    />
-                )}
-                <div className="mt-4 flex justify-end">
-                    <button
-                        className="bg-blue-500 text-white py-2 px-4 rounded"
-                        onClick={triggerPrint}
-                    >
-                        Print
-                    </button>
-                    <button
-                        className="ml-2 bg-gray-500 text-white py-2 px-4 rounded"
-                        onClick={() => setPrintModalOpen(false)}
-                    >
-                        Cancel
-                    </button>
+            {printModalOpen && printData && (
+                <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-50">
+                    <div className="bg-white p-6 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                        <PatientPrintComponent
+                            ref={printComponentRef} // Attach ref to the component
+                            patientName={printData.patientName}
+                            services={printData.services}
+                        />
+                        <div className="mt-4 flex justify-end">
+                            <button className="bg-blue-500 text-white py-2 px-4 rounded" onClick={triggerPrint}>
+                                Print
+                            </button>
+                            <button className="ml-2 bg-gray-500 text-white py-2 px-4 rounded" onClick={() => setPrintModalOpen(false)}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </Modal>
+            )}
 
-            {/* Style to ensure only the modal content gets printed */}
-            <style>{`
-                @media print {
-                    body * {
-                        visibility: hidden;
-                    }
-
-                    .printable-area, .printable-area * {
-                        visibility: visible;
-                    }
-
-                    .printable-area {
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 100%;
-                    }
-                }
-            `}</style>
         </>
     );
 }
