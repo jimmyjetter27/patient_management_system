@@ -21,6 +21,10 @@ const PatientPrintComponent = React.forwardRef(({ patientName, services }, ref) 
                 </div>
 
                 <h2 className="section-title">Services for Today:</h2>
+
+                {/* Adding spacing between the title and the list */}
+                <div style={{ marginBottom: '20px' }}></div>
+
                 <ul className="services-list">
                     {services.map((service, index) => (
                         !service.service_type.includes('attachment') && (
@@ -97,7 +101,7 @@ const PatientPrintComponent = React.forwardRef(({ patientName, services }, ref) 
                         font-size: 20px;
                         font-weight: bold;
                         margin-top: 20px;
-                        text-align: left;
+                        text-align: center;
                     }
 
                     .services-list {
