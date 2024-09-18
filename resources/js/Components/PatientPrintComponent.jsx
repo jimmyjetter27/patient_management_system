@@ -44,7 +44,7 @@ const PatientPrintComponent = React.forwardRef(({ patientName, services }, ref) 
                                 {/* Displaying the human-readable created_at date */}
                                 {service.created_at && (
                                     <p className="service-detail">
-                                        <strong>Service Created At:</strong> {service.created_at}
+                                        <strong>Date:</strong> {service.created_at}
                                     </p>
                                 )}
                             </li>

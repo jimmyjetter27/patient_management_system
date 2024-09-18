@@ -26,8 +26,8 @@ class PatientServiceResource extends JsonResource
             'id' => $this->id,
             'service_type' => $this->service_type,
             'service_data' => $serviceData, // Return the updated service data
-            'created_at' => $this->created_at->format('F j, Y, g:i a'), // Human-readable format
-            'updated_at' => $this->updated_at->format('F j, Y, g:i a'),
+            'created_at' => $this->created_at->format('M j, Y, g:i a'),
+            'updated_at' => $this->updated_at->format('M j, Y, g:i a'),
         ];
     }
 }
