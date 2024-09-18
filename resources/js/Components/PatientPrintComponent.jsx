@@ -36,10 +36,17 @@ const PatientPrintComponent = React.forwardRef(({ patientName, services }, ref) 
                                     }
                                     return (
                                         <p key={key} className="service-detail">
-                                            {convertToHeadlineCase(key)}: {convertToHeadlineCase(service.service_data[key])}
+                                            {convertToHeadlineCase(key)}: {service.service_data[key]}
                                         </p>
                                     );
                                 })}
+
+                                {/* Displaying the human-readable created_at date */}
+                                {service.created_at && (
+                                    <p className="service-detail">
+                                        <strong>Service Created At:</strong> {service.created_at}
+                                    </p>
+                                )}
                             </li>
                         )
                     ))}
